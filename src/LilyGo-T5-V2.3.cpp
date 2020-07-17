@@ -24,6 +24,8 @@
 #include <HTTPClient.h>
 #include <ArduinoJson-v6.15.2.h>
 
+#define uS_TO_S_FACTOR 1000000
+
 #include <GxGDEH0213B73/GxGDEH0213B73.h>  // 2.13" b/w newer panel
 
 // FreeFonts from Adafruit_GFX
@@ -140,11 +142,11 @@ void manageJson(String json) {
             //const char* msg       = doc["result"]["songs"][i]["msg"];
             display.setFont(&FreeSerif9pt7b);
             display.print(song_name);
-            display.setFont(&TomThumb);
-            display.printf(" -%s", artist);
+            //display.setFont(&TomThumb);
+            //display.printf(" -%s", artist);
             //display.print(" ");
             //display.println(msg);
-            display.setFont(&FreeSerif9pt7b);
+            //display.setFont(&FreeSerif9pt7b);
             display.println();
         }
     }
@@ -164,7 +166,13 @@ void setup()
     http.addHeader("X-LC-Key", LC_KEY);
     //Serial.printf("Posting %s to %s\n", String(HTTP_DATA_F)+NEUID+HTTP_DATA_B, HTTP_ADDR);
     Serial.print("HTTP POST Response Status Code: ");
-    Serial.println(http.POST(String(HTTP_DATA_F)+NEUID+HTTP_DATA_B));
+    int status_code = http.POST(String(HTTP_DATA_F)+NEUID+HTTP_DATA_B);
+    Serial.println(status_code);
+    if (status_code == -11) {
+        Serial.println("Retrying...");
+        status_code = http.POST(String(HTTP_DATA_F)+NEUID+HTTP_DATA_B);
+        Serial.printf("HTTP POST Response Status Code: %d\n", status_code);
+    }
     String payload = http.getString();
     //Serial.println(payload);
 
@@ -176,6 +184,7 @@ void setup()
     display.fillScreen(GxEPD_WHITE);
     display.setTextColor(GxEPD_BLACK);
 
+    //Serial.println(payload);
     manageJson(payload);
 
     /*
@@ -226,6 +235,7 @@ void setup()
     display.update();
 
     // goto sleep
+    esp_sleep_enable_timer_wakeup(10 * 60 * uS_TO_S_FACTOR);
     esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, LOW);
 
     esp_deep_sleep_start();
