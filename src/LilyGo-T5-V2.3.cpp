@@ -138,15 +138,17 @@ void manageJson(String json) {
         //display.setFont(&FreeSerif9pt7b);
         for (std::uint8_t i = 0; i < doc["result"]["size"]; i++) {
             const char* song_name = doc["result"]["songs"][i]["name"];
-            const char* artist    = doc["result"]["songs"][i]["artist"];
+            //const char* artist    = doc["result"]["songs"][i]["artist"];
             //const char* msg       = doc["result"]["songs"][i]["msg"];
+            const char* datetime       = doc["result"]["songs"][i]["datetime"];
             display.setFont(&FreeSerif9pt7b);
             display.print(song_name);
-            //display.setFont(&TomThumb);
+            display.setFont(&TomThumb);
             //display.printf(" -%s", artist);
+            display.printf(" %s", datetime);
             //display.print(" ");
             //display.println(msg);
-            //display.setFont(&FreeSerif9pt7b);
+            display.setFont(&FreeSerif9pt7b);
             display.println();
         }
     }
@@ -229,7 +231,7 @@ void setup()
     */
 
     display.setCursor(display.width() - 30, display.height() - 6);
-    display.setFont(&FreeSerif9pt7b);
+    display.setFont(&TomThumb);
     display.println(getVoltage());
     
     display.update();
