@@ -1,6 +1,6 @@
 # 163Music-Feed-Viewer
 
-![demo](./WeChatImage_20200712175256.jpg "Demo")
+![demo](./demo.jpg "Demo")
 
 Runs on LilyGo T5 V2.3 2.13 inch EPD dev board.
 
