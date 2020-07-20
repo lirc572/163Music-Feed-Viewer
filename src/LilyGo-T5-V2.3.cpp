@@ -11,7 +11,7 @@
  * It is necessary to include these two headers to access LeanCloud Cloud function through REST API.
  **/
 #define LC_ID "171P7IxHeNStt1LHc4dT4f90-MdYXbMMI" //LeanCloud Application ID
-#define LC_KEY "uDYWXqmSCYAPOoe9wHf1X9bL" //LeanCloud Application Key
+#define LC_KEY "uDYWXqmSCYAPOoe9wHf1X9bL"         //LeanCloud Application Key
 
 // include library, include base class, make path known
 #include <Arduino.h>
@@ -23,10 +23,13 @@
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
 #include <ArduinoJson-v6.15.2.h>
+#include <time.h>
+#include <cstdio>
+#include <cstdlib>
 
-#define uS_TO_S_FACTOR 1000000
+#define uS_TO_S_FACTOR 1000000ull
 
-#include <GxGDEH0213B73/GxGDEH0213B73.h>  // 2.13" b/w newer panel
+#include <GxGDEH0213B73/GxGDEH0213B73.h> // 2.13" b/w newer panel
 
 // FreeFonts from Adafruit_GFX
 #include <Fonts/FreeMonoBold9pt7b.h>
@@ -56,8 +59,8 @@
 
 #define BATT_ADC_PIN 35
 
-GxIO_Class io(SPI, /*CS=5*/ ELINK_SS, /*DC=*/ ELINK_DC, /*RST=*/ ELINK_RESET);
-GxEPD_Class display(io, /*RST=*/ ELINK_RESET, /*BUSY=*/ ELINK_BUSY);
+GxIO_Class io(SPI, /*CS=5*/ ELINK_SS, /*DC=*/ELINK_DC, /*RST=*/ELINK_RESET);
+GxEPD_Class display(io, /*RST=*/ELINK_RESET, /*BUSY=*/ELINK_BUSY);
 
 SPIClass sdSPI(VSPI);
 
@@ -75,13 +78,18 @@ void setupADC()
     esp_adc_cal_characteristics_t adc_chars;
     esp_adc_cal_value_t val_type = esp_adc_cal_characterize((adc_unit_t)ADC_UNIT_1, (adc_atten_t)ADC1_CHANNEL_6, (adc_bits_width_t)ADC_WIDTH_BIT_12, 1100, &adc_chars);
     //Check type of calibration value used to characterize ADC
-    if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF) {
-        Serial.printf("eFuse Vref:%u mV", adc_chars.vref);
+    if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF)
+    {
+        //Serial.printf("eFuse Vref:%u mV", adc_chars.vref);
         vref = adc_chars.vref;
-    } else if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP) {
-        Serial.printf("Two Point --> coeff_a:%umV coeff_b:%umV\n", adc_chars.coeff_a, adc_chars.coeff_b);
-    } else {
-        Serial.println("Default Vref: 1100mV");
+    }
+    else if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP)
+    {
+        //Serial.printf("Two Point --> coeff_a:%umV coeff_b:%umV\n", adc_chars.coeff_a, adc_chars.coeff_b);
+    }
+    else
+    {
+        //Serial.println("Default Vref: 1100mV");
     }
 }
 
@@ -92,7 +100,8 @@ String getVoltage()
     return String(battery_voltage) + "V";
 }
 
-void setupWifi() {
+void setupWifi()
+{
     wifiMulti.addAP(WIFI_SSID, WIFI_PASSWORD);
     while (wifiMulti.run() != WL_CONNECTED)
     {
@@ -103,17 +112,20 @@ void setupWifi() {
     Serial.println("Wifi connected!");
 }
 
-String readFile(fs::FS &fs, const char * path){
+String readFile(fs::FS &fs, const char *path)
+{
     Serial.printf("Reading file: %s\n", path);
 
     File file = fs.open(path);
-    if(!file){
+    if (!file)
+    {
         Serial.println("Failed to open file for reading");
         return String();
     }
     String str("");
     Serial.print("Read from file: ");
-    while(file.available()){
+    while (file.available())
+    {
         //Serial.write(file.read());
         //str.append(std::string(1, file.read()));
         str.concat(char(file.read()));
@@ -123,24 +135,32 @@ String readFile(fs::FS &fs, const char * path){
     return str;
 }
 
-const int capacity = JSON_ARRAY_SIZE(20) + JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + 10*JSON_OBJECT_SIZE(5) + 1600;
+const int capacity = JSON_ARRAY_SIZE(20) + JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2) + 10 * JSON_OBJECT_SIZE(5) + 1600;
 
-void manageJson(String json) {
+const long gmtOffset_sec = 28800;
+const char *ntpServer = "asia.pool.ntp.org";
+
+void manageJson(String json)
+{
     DynamicJsonDocument doc(capacity);
     DeserializationError err = deserializeJson(doc, json.c_str());
-    if (err) {
+    if (err)
+    {
         display.setCursor(20, display.height() / 2 - 10);
         display.setFont(&FreeSerif9pt7b);
         display.println("Json deserialization failed:");
         display.println(err.c_str());
-    } else {
+    }
+    else
+    {
         display.setCursor(0, 6);
         //display.setFont(&FreeSerif9pt7b);
-        for (std::uint8_t i = 0; i < doc["result"]["size"]; i++) {
-            const char* song_name = doc["result"]["songs"][i]["name"];
+        for (std::uint8_t i = 0; i < doc["result"]["size"]; i++)
+        {
+            const char *song_name = doc["result"]["songs"][i]["name"];
             //const char* artist    = doc["result"]["songs"][i]["artist"];
             //const char* msg       = doc["result"]["songs"][i]["msg"];
-            const char* datetime       = doc["result"]["songs"][i]["datetime"];
+            const char *datetime = doc["result"]["songs"][i]["datetime"];
             display.setFont(&FreeSerif9pt7b);
             display.print(song_name);
             display.setFont(&TomThumb);
@@ -159,8 +179,6 @@ void setup()
     Serial.begin(115200);
     Serial.println();
     Serial.println("setup");
-
-    
     setupWifi();
     http.begin(HTTP_ADDR); //HTTP
     http.addHeader("Content-Type", "application/json");
@@ -168,15 +186,15 @@ void setup()
     http.addHeader("X-LC-Key", LC_KEY);
     //Serial.printf("Posting %s to %s\n", String(HTTP_DATA_F)+NEUID+HTTP_DATA_B, HTTP_ADDR);
     Serial.print("HTTP POST Response Status Code: ");
-    int status_code = http.POST(String(HTTP_DATA_F)+NEUID+HTTP_DATA_B);
+    int status_code = http.POST(String(HTTP_DATA_F) + NEUID + HTTP_DATA_B);
     Serial.println(status_code);
-    if (status_code == -11) {
+    if (status_code == -11)
+    {
         Serial.println("Retrying...");
-        status_code = http.POST(String(HTTP_DATA_F)+NEUID+HTTP_DATA_B);
+        status_code = http.POST(String(HTTP_DATA_F) + NEUID + HTTP_DATA_B);
         Serial.printf("HTTP POST Response Status Code: %d\n", status_code);
     }
     String payload = http.getString();
-    //Serial.println(payload);
 
     setupADC();
     SPI.begin(SPI_CLK, SPI_MISO, SPI_MOSI, ELINK_SS);
@@ -186,8 +204,18 @@ void setup()
     display.fillScreen(GxEPD_WHITE);
     display.setTextColor(GxEPD_BLACK);
 
-    //Serial.println(payload);
-    manageJson(payload);
+    if (status_code > 399 && status_code < 600)
+    {
+        display.setCursor(20, display.height() / 2 - 10);
+        display.setFont(&FreeSerif9pt7b);
+        display.print("API call returns ");
+        display.println(status_code);
+    }
+    else
+    {
+        //Serial.println(payload);
+        manageJson(payload);
+    }
 
     /*
     sdSPI.begin(SDCARD_CLK, SDCARD_MISO, SDCARD_MOSI, SDCARD_SS);
@@ -230,10 +258,33 @@ void setup()
     // Cnt be uglier
     */
 
-    display.setCursor(display.width() - 30, display.height() - 6);
+    display.setCursor(display.width() - 21, display.height() - 4);
     display.setFont(&TomThumb);
     display.println(getVoltage());
-    
+
+    // Update local time
+    configTime(gmtOffset_sec, 0, ntpServer);
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo))
+    {
+        Serial.println("Failed to obtain time");
+    }
+    else
+    {
+        Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+
+        display.setCursor(display.width() - 52, display.height() / 2 + 10);
+        display.printf("Updated: %02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+        char timeHour[3];
+        strftime(timeHour,3, "%H", &timeinfo);
+        int th = atoi(timeHour);
+        if (th >= 0 && th <7) {
+            esp_sleep_enable_timer_wakeup(7ull * 60ull * 60ull * uS_TO_S_FACTOR);
+            esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, LOW);
+            esp_deep_sleep_start();
+        }
+    }
+
     display.update();
 
     // goto sleep
@@ -242,7 +293,6 @@ void setup()
 
     esp_deep_sleep_start();
 }
-
 
 void loop()
 {
