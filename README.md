@@ -1,5 +1,7 @@
 # 163Music-Feed-Viewer
 
+![build](https://github.com/lirc572/163Music-Feed-Viewer/workflows/PlatformIO%20CI/badge.svg)
+
 ![demo](./demo.jpg "Demo")
 
 Runs on LilyGo T5 V2.3 2.13 inch EPD dev board.
@@ -19,9 +21,9 @@ Example of `definitions.h`:
 
 ```C
 // src/definitions.h
-#define WIFI_SSID wireless@163
-#define WIFI_PASSWORD password@163
-#define NEUID 32953014
+#define WIFI_SSID "wireless@163"
+#define WIFI_PASSWORD "password@163"
+#define NEUID "32953014"
 ```
 ## 3D Printed Case
 
