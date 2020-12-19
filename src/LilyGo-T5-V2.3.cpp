@@ -22,7 +22,7 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
-#include <ArduinoJson-v6.15.2.h>
+#include <ArduinoJson.h>
 #include <time.h>
 #include <cstdio>
 #include <cstdlib>
